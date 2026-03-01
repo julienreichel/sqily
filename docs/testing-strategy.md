@@ -6,7 +6,7 @@
 - Maintain fast developer feedback and high confidence before release.
 
 ## Current test stack
-- Framework: Minitest (`rails test`)
+- Framework: Minitest (`bin/rails test`)
 - Coverage: SimpleCov with minimum threshold `93.63%` (configured in `test/test_helper.rb`)
 - Fixtures: global fixtures enabled (`fixtures :all`)
 - Mocks/stubs: `mocha/minitest`
@@ -76,25 +76,33 @@ Based on test file inventory:
 
 ## Execution commands
 
-### Fast local loop
+### Docker-first loop (recommended)
 ```bash
-rails test
+docker compose up -d db web
+docker compose exec web bin/rails test
+```
+
+### Fast local loop (inside `web` container)
+```bash
+bin/rails test
 ```
 
 ### Project CI equivalent
 ```bash
-bin/ci
+docker compose exec web bin/rails test
+docker compose exec web bundle exec standardrb
+docker compose exec web bin/brakeman
 ```
 This currently executes:
-- `rails test`
+- `bin/rails test`
 - `bundle exec standardrb`
 - `bin/brakeman`
 
 ### Targeted runs
 ```bash
-rails test test/models/subscription_test.rb
-rails test test/controllers/messages_controller_test.rb
-rails test test/jobs/daily_summary_job_test.rb
+docker compose exec web bin/rails test test/models/subscription_test.rb
+docker compose exec web bin/rails test test/controllers/messages_controller_test.rb
+docker compose exec web bin/rails test test/jobs/daily_summary_job_test.rb
 ```
 
 ## Recommended additions for delivery speed
@@ -110,7 +118,7 @@ rails test test/jobs/daily_summary_job_test.rb
 
 ## Quality gates proposal
 - Required on PR:
-  - `rails test`
+  - `bin/rails test`
   - lint (`standardrb`)
   - security static check (`brakeman`)
 - Recommended:
