@@ -175,6 +175,6 @@ This document consolidates key behavioral rules currently distributed across mod
   - run weekly summaries on configured weekday.
 
 ## References
-- Flow-level details: `docs/*-flow.md`
-- Domain structure: `docs/domain-model.md`
-- Permissions: `docs/permissions-matrix.md`
+- Flow-level details: `docs/flows/*-flow.md`
+- Domain structure: `docs/tech/domain-model.md`
+- Permissions: `docs/tech/permissions-matrix.md`

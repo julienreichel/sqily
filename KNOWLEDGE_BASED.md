@@ -14,7 +14,7 @@ Core loops include:
 - Collaboration (messages, polls, events, workspaces).
 - Community governance (memberships, moderation, invitations, teams).
 
-Primary reference: `README.md` and `/docs/project.md`.
+Primary reference: `README.md` and `docs/project.md`.
 
 ## 2. Runtime and Stack
 
@@ -41,7 +41,10 @@ Primary reference: `README.md` and `/docs/project.md`.
   - `app/lib`: form objects and policies-like helpers (`SkillForm`, `User::Permissions`, etc.)
 - Routing: `config/routes.rb`
 - Schema truth: `db/schema.rb` (version `2026_01_15_152937`)
-- Documentation: `docs/*.md`
+- Documentation:
+  - root docs: `docs/*.md`
+  - technical docs: `docs/tech/*.md`
+  - flow docs: `docs/flows/*.md`
 - Tests: `test/**` (Minitest, fixture-heavy)
 - Quality gate script: `bin/ci`
 
@@ -65,7 +68,7 @@ Main entities:
 - Signals:
   - `Notification` types, `Badge` types, `PageView`
 
-Canonical model reference: `/docs/domain-model.md`.
+Canonical model reference: `docs/tech/domain-model.md`.
 
 ## 5. Request and Access Model
 
@@ -86,7 +89,7 @@ Authorization is a mix of:
 - `User::Permissions` checks (object-level actions)
 - Model predicates (`pinnable_by?`, `viewable_by?`, etc.)
 
-Permissions matrix reference: `/docs/permissions-matrix.md`.
+Permissions matrix reference: `docs/tech/permissions-matrix.md`.
 
 ## 6. Critical Business Flows (implemented)
 
@@ -111,12 +114,12 @@ Permissions matrix reference: `/docs/permissions-matrix.md`.
 
 Flow docs:
 
-- `/docs/product-flows.md`
-- `/docs/skill-discovery-and-progression-flow.md`
-- `/docs/assessment-orchestration-flow.md`
-- `/docs/homework-submission-and-review-flow.md`
-- `/docs/messaging-and-collaboration-flow.md`
-- `/docs/events-participation-flow.md`
+- `docs/product-flows.md`
+- `docs/flows/skill-discovery-and-progression-flow.md`
+- `docs/flows/assessment-orchestration-flow.md`
+- `docs/flows/homework-submission-and-review-flow.md`
+- `docs/flows/messaging-and-collaboration-flow.md`
+- `docs/flows/events-participation-flow.md`
 
 ## 7. High-Impact Models and Behaviors
 
@@ -155,13 +158,13 @@ This means small data changes may have broad downstream effects.
 
 - Test framework: Minitest (`test/**`)
 - Fixtures: global fixtures (`fixtures :all`)
-- Coverage gate: SimpleCov minimum `93.63%`
+- Coverage gate: SimpleCov minimum `93.60%`
 - CI command chain (`bin/ci`):
   - `rails test`
   - `bundle exec standardrb`
   - `bin/brakeman`
 
-Testing strategy reference: `/docs/testing-strategy.md`.
+Testing strategy reference: `docs/testing-strategy.md`.
 
 ## 10. Known Technical Characteristics / Risks
 
@@ -171,16 +174,16 @@ Testing strategy reference: `/docs/testing-strategy.md`.
 - Polling messaging architecture (not WebSocket).
 - Permission coverage is mixed; some endpoints are documented as missing explicit guards.
 
-Reference: `/docs/code-quality-review.md` and `/docs/permissions-matrix.md`.
+Reference: `docs/code-quality-review.md` and `docs/tech/permissions-matrix.md`.
 
 ## 11. Agent Orientation: Where to Start for Any Change
 
-1. Identify the flow in `/docs/*flow.md`.
+1. Identify the flow in `docs/flows/*flow.md`.
 2. Confirm route in `config/routes.rb`.
 3. Inspect controller action + `before_action` guards.
 4. Trace model/service side effects (callbacks, mailers, jobs, message/notification triggers).
 5. Update/add tests in `test/models`, `test/controllers`, and `test/jobs` as needed.
-6. Run `bin/ci` (or Docker equivalent from `/docs/dev-setup.md`).
+6. Run `bin/ci` (or Docker equivalent from `docs/dev-setup.md`).
 
 ## 12. Source of Truth Priority
 
@@ -188,6 +191,5 @@ When docs and code differ, trust in this order:
 
 1. `db/schema.rb` and executable code in `app/**`
 2. tests in `test/**`
-3. `/docs/**`
+3. `docs/**`
 4. `README.md`
-

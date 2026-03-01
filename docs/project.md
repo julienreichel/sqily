@@ -58,4 +58,4 @@ Out of scope (current codebase):
 ## References
 - Existing architecture documentation: `docs/c4-model.md`
 - Existing flow inventory: `docs/product-flows.md`
-- Existing detailed user/moderator flows: `docs/*-flow.md`
+- Existing detailed user/moderator flows: `docs/flows/*-flow.md`
