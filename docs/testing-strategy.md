@@ -7,7 +7,7 @@
 
 ## Current test stack
 - Framework: Minitest (`bin/rails test`)
-- Coverage: SimpleCov with minimum threshold `93.63%` (configured in `test/test_helper.rb`)
+- Coverage: SimpleCov with minimum threshold `93.60%` (configured in `test/test_helper.rb`)
 - Fixtures: global fixtures enabled (`fixtures :all`)
 - Mocks/stubs: `mocha/minitest`
 
