@@ -42,16 +42,16 @@ This catalog documents the server routes by domain, with key payloads, auth requ
 | GET | `/:permalink/tree` | Public/member (action-specific) | optional `community_tree` | HTML |
 | GET | `/:permalink/edit` | Moderator/authorized | - | HTML form |
 | PATCH | `/:permalink` | Moderator/authorized | `community[name,description,permalink,free_skill_creation,public,registration_code,duplicate_evaluations]` | Redirect/render |
-| GET | `/:permalink/state` | Member | - | HTML |
+| GET | `/:permalink/state` | Member | - | JSON (`active_user_ids`, `unread_notification_count`) |
 | POST | `/:permalink/duplicate` | Conditional | duplication params | Redirect |
 | GET | `/:permalink/progression` | Member | optional filters | HTML |
-| GET | `/:permalink/users` | Member | optional filters | HTML |
-| GET | `/:permalink/users/:id` | Authenticated member | `id` | HTML |
+| GET | `/:permalink/users` | Public (community lookup only) | optional filters | HTML (layout: false) |
+| GET | `/:permalink/users/:id` | Authenticated | `id` | HTML (layout: false) |
 | DELETE | `/:permalink/users/:id` | Moderator | `id` | Redirect |
-| DELETE | `/:permalink/users/:id/avatar` | Owner/moderator flow | `id` | Redirect |
+| DELETE | `/:permalink/users/:id/avatar` | Unknown (no explicit guard) | `id` | `head(:ok)` |
 | POST | `/:permalink/memberships` | Public/auth depending flow | `registration_code` etc. | Redirect |
 | PATCH | `/:permalink/memberships/:id` | Member (self context) | `membership[description]`, `user[...]` | Redirect/render |
-| PUT | `/:permalink/memberships/:id/moderator` | Moderator | `id` | Redirect |
+| PUT | `/:permalink/memberships/:id/moderator` | Unknown (no explicit guard) | `id` | Redirect |
 
 ## 3) Invitations and Requests
 
@@ -93,8 +93,8 @@ This catalog documents the server routes by domain, with key payloads, auth requ
 | POST | `/:permalink/skills/:skill_id/prerequisites` | Moderator/authorized | `prerequisite[from_skill_id]` | Partial HTML |
 | PATCH | `/:permalink/skills/:skill_id/prerequisites/:id/toggle_mandatory` | Moderator/authorized | - | `head(:ok)` |
 | DELETE | `/:permalink/skills/:skill_id/prerequisites/:id` | Moderator/authorized | - | `head(:ok)` |
-| POST | `/:permalink/skills/:skill_id/tasks/:id/toggle` | Member | - | `head(:ok)` |
-| DELETE | `/:permalink/skills/:skill_id/tasks/:id` | Moderator/authorized flow | - | `head(:ok)` |
+| POST | `/:permalink/skills/:skill_id/tasks/:id/toggle` | Unknown (no explicit guard) | - | `head(:ok)` |
+| DELETE | `/:permalink/skills/:skill_id/tasks/:id` | Unknown (no explicit guard) | - | `head(:ok)` |
 | POST | `/:permalink/subscription/:id/complete` | Conditional (`evaluate_subscription?`) | - | Redirect |
 | POST | `/:permalink/subscription/:id/uncomplete` | Moderator | - | Redirect |
 
@@ -156,7 +156,7 @@ This catalog documents the server routes by domain, with key payloads, auth requ
 | POST | `/:permalink/exams/:id/notes` | Candidate or examiner | `evaluation_note[content]` + `accept/reject/send` button flags | Redirect/render |
 | POST | `/homeworks/:id/upload` | Homework owner | `homework_file` | Redirect |
 | DELETE | `/homeworks/:id` | Homework owner | - | Redirect |
-| POST | `/homeworks/:id/evaluate` | Evaluator flow | `comment`, optional `file`, `approve` or `reject` | Redirect |
+| POST | `/homeworks/:id/evaluate` | Unknown (no explicit guard) | `comment`, optional `file`, `approve` or `reject` | Redirect |
 
 ## 9) Workspace and Profile Domain
 
@@ -173,8 +173,8 @@ This catalog documents the server routes by domain, with key payloads, auth requ
 | POST | `/:permalink/workspaces/:workspace_id/partnerships` | Workspace manager | `workspace_partnership[user_id,read_only]` | Redirect |
 | DELETE | `/:permalink/workspaces/:workspace_id/partnerships/:id` | Conditional (`destroy_partnership?`) | - | Redirect |
 | GET | `/:permalink/profile/:id` | Public | - | HTML |
-| POST | `/:permalink/profile/:id/public` | Membership owner/moderator flow | - | Redirect |
-| POST | `/:permalink/profile/:id/private` | Membership owner/moderator flow | - | Redirect |
+| POST | `/:permalink/profile/:id/public` | Unknown (no explicit guard) | - | Redirect |
+| POST | `/:permalink/profile/:id/private` | Unknown (no explicit guard) | - | Redirect |
 | POST | `/:permalink/profile/hidden_items` | Member | `hidden_profile_item[workspace_id,subscription_id]` | Redirect |
 | DELETE | `/:permalink/profile/hidden_items/:id` | Member | - | Redirect |
 
@@ -182,8 +182,8 @@ This catalog documents the server routes by domain, with key payloads, auth requ
 
 | Method | Path | Auth | Payload (key params) | Response shape |
 |---|---|---|---|---|
-| GET | `/:permalink/statistics` | Moderator-equivalent (`read_community_statistics?`) | order/filter params | HTML |
-| GET | `/:permalink/statistics/skills` | Moderator-equivalent | order/filter params | HTML |
+| GET | `/:permalink/statistics` | Conditional (`read_community_statistics?`) | order/filter params | HTML/CSV |
+| GET | `/:permalink/statistics/skills` | Conditional (`read_community_statistics?`) | order/filter params | HTML |
 | GET | `/:permalink/notifications` | Member | optional pagination/filter | HTML |
 | ALL | `/admin/*` | Admin only | domain-specific forms | HTML redirect/render |
 

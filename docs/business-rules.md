@@ -163,7 +163,7 @@ This document consolidates key behavioral rules currently distributed across mod
 
 ### Membership
 - One membership per user/community.
-- Moderator role can be toggled by authorized moderator/admin flows.
+- Moderator role toggle endpoint currently has no explicit controller authorization guard.
 
 ## 9) Scheduled Rules and Periodic Automation
 
@@ -176,5 +176,5 @@ This document consolidates key behavioral rules currently distributed across mod
 
 ## References
 - Flow-level details: `docs/*-flow.md`
-- Domain structure: `docs/Domain-model.md`
-- Permissions: `docs/Permissions-matrix.md`
+- Domain structure: `docs/domain-model.md`
+- Permissions: `docs/permissions-matrix.md`
