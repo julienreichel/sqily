@@ -228,3 +228,22 @@ Fix:
 3. Run `docker compose exec web bin/rails test` once to validate local baseline.
 4. Walk one core user flow and one moderator flow manually.
 5. Only then start implementation work on new features.
+
+## GitHub CI setup
+
+GitHub Actions workflow:
+- [ci.yml](/Users/julienreichel/git/sqily/.github/workflows/ci.yml)
+
+Repository secrets required:
+1. `AWS_BUCKET_URL` (required)
+   - format: `https://<access_key>:<secret>@s3-eu-central-1.amazonaws.com/<bucket>`
+   - used by tests that call S3-backed upload callbacks.
+
+Repository secrets not required:
+1. `AWS_BUCKET_PREFIX`
+   - not a secret; set in workflow as `test`.
+2. `RAILS_MASTER_KEY`
+   - not required for current `RAILS_ENV=test` CI workflow; workflow sets `dummy`.
+
+Where to set:
+- GitHub repository -> Settings -> Secrets and variables -> Actions -> New repository secret.
