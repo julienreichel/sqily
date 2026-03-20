@@ -23,6 +23,10 @@ Required for boot:
 - `AWS_BUCKET_URL` (app parses it at boot in `AwsFileStorage`)
 - `RAILS_MASTER_KEY` (required by compose/env setup)
 
+`AWS_BUCKET_URL` supports both:
+- AWS-hosted S3 URLs, for example: `https://<access_key>:<secret>@s3-eu-central-1.amazonaws.com/<bucket>`
+- local S3-compatible endpoints, for example: `http://minioadmin:minioadmin@127.0.0.1:9000/sqily-test?region=us-east-1&path_style=true`
+
 `docker-compose.yml` already provides:
 - `DATABASE_URL=postgresql://sqily:sqily@db:5432/sqily_development`
 - app binding and volume mounts
@@ -103,6 +107,10 @@ docker compose exec web bundle exec rake sqily:update_crontab
 - For S3-backed behavior, configure:
   - `AWS_BUCKET_URL`
   - optional `AWS_BUCKET_PREFIX`
+- For local or CI S3-compatible services (for example MinIO), use:
+  - a bucket URL whose path is the bucket name,
+  - `region` query param when the host is not AWS-shaped,
+  - `path_style=true` for MinIO/path-style addressing.
 
 ### Create AWS bucket and least-privilege IAM user (AWS CLI, eu-central-1)
 The repository includes an automation script:
@@ -191,8 +199,9 @@ Symptom:
 - failing tests in storage callbacks (for example `AwsFileStorage#save_file`, `AwsAvatarStorage#save_avatar`).
 
 Fix:
-- configure real S3 credentials via `AWS_BUCKET_URL` (do not use dummy values).
-- easiest path: run `./scripts/setup-aws-s3-dev.sh`.
+- configure a reachable S3-compatible endpoint via `AWS_BUCKET_URL`.
+- for local development, easiest real-AWS path remains `./scripts/setup-aws-s3-dev.sh`.
+- for CI, the repository now uses local MinIO instead of a real AWS bucket.
 - recreate containers:
 ```bash
 docker compose down
@@ -234,16 +243,17 @@ Fix:
 GitHub Actions workflow:
 - [ci.yml](/Users/julienreichel/git/sqily/.github/workflows/ci.yml)
 
-Repository secrets required:
-1. `AWS_BUCKET_URL` (required)
-   - format: `https://<access_key>:<secret>@s3-eu-central-1.amazonaws.com/<bucket>`
-   - used by tests that call S3-backed upload callbacks.
+CI storage model:
+1. GitHub Actions starts a local MinIO service.
+2. The workflow points `AWS_BUCKET_URL` to that local S3-compatible endpoint.
+3. The workflow creates the `sqily-test` bucket before `bin/rails db:prepare` and `bin/rails test`.
+4. No GitHub secret is required for bucket access in CI.
 
-Repository secrets not required:
-1. `AWS_BUCKET_PREFIX`
-   - not a secret; set in workflow as `test`.
-2. `RAILS_MASTER_KEY`
-   - not required for current `RAILS_ENV=test` CI workflow; workflow sets `dummy`.
+Repository secrets not required for current CI:
+1. `AWS_BUCKET_URL`
+2. `AWS_BUCKET_PREFIX`
+3. `RAILS_MASTER_KEY`
 
-Where to set:
-- GitHub repository -> Settings -> Secrets and variables -> Actions -> New repository secret.
+Development vs CI:
+1. Local development may still use a real AWS bucket via `.env` and `scripts/setup-aws-s3-dev.sh`.
+2. CI uses local MinIO by default to exercise the real S3 storage code path without cloud provisioning.
