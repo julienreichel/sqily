@@ -20,7 +20,8 @@ module AwsFileStorage
     unless aws_hosted
       endpoint_uri = bucket_uri.dup
       endpoint_uri.user = endpoint_uri.password = nil
-      endpoint_uri.path = endpoint_uri.query = endpoint_uri.fragment = nil
+      endpoint_uri.path = ""
+      endpoint_uri.query = endpoint_uri.fragment = nil
       client_options[:endpoint] = endpoint_uri.to_s
       client_options[:force_path_style] = (query["path_style"] != "false")
     end
