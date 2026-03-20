@@ -22,15 +22,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      minio:
-        image: bitnami/minio:latest
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-          MINIO_DEFAULT_BUCKETS: sqily-test
-        ports:
-          - 9000:9000
-
     env:
       RAILS_ENV: test
       DATABASE_URL: postgresql://postgres@127.0.0.1:5432/sqily_test
@@ -56,14 +47,23 @@ jobs:
           ruby-version: .ruby-version
           bundler-cache: true
 
-      - name: Create MinIO test bucket
+      - name: Start MinIO
         run: |
+          docker run -d --rm \
+            --name sqily-minio \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio:latest server /data
           for attempt in $(seq 1 30); do
-            if aws --endpoint-url http://127.0.0.1:9000 s3api list-buckets >/dev/null 2>&1; then
+            if curl -fsS http://127.0.0.1:9000/minio/health/live >/dev/null 2>&1; then
               break
             fi
             sleep 2
           done
+
+      - name: Create MinIO test bucket
+        run: |
           aws --endpoint-url http://127.0.0.1:9000 s3api create-bucket --bucket sqily-test || \
             aws --endpoint-url http://127.0.0.1:9000 s3api head-bucket --bucket sqily-test
 
