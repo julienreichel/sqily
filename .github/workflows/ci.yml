@@ -39,7 +39,7 @@ jobs:
       - name: Install system packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y awscli libpq-dev imagemagick libmagickwand-dev pkg-config
+          sudo apt-get install -y libpq-dev imagemagick libmagickwand-dev pkg-config
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -64,8 +64,21 @@ jobs:
 
       - name: Create MinIO test bucket
         run: |
-          aws --endpoint-url http://127.0.0.1:9000 s3api create-bucket --bucket sqily-test || \
-            aws --endpoint-url http://127.0.0.1:9000 s3api head-bucket --bucket sqily-test
+          bundle exec ruby -e '
+            require "aws-sdk-s3"
+            s3 = Aws::S3::Client.new(
+              access_key_id: ENV.fetch("AWS_ACCESS_KEY_ID"),
+              secret_access_key: ENV.fetch("AWS_SECRET_ACCESS_KEY"),
+              region: ENV.fetch("AWS_DEFAULT_REGION"),
+              endpoint: "http://127.0.0.1:9000",
+              force_path_style: true
+            )
+
+            begin
+              s3.create_bucket(bucket: "sqily-test")
+            rescue Aws::S3::Errors::BucketAlreadyOwnedByYou, Aws::S3::Errors::BucketAlreadyExists
+            end
+          '
 
       - name: Prepare database
         run: bin/rails db:prepare
