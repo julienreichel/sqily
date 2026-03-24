@@ -78,7 +78,7 @@ Based on test file inventory:
 
 ### Docker-first loop (recommended)
 ```bash
-docker compose up -d db web
+docker compose up -d db minio web
 docker compose exec web bin/rails test
 ```
 

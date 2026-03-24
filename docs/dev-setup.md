@@ -10,30 +10,40 @@
 ## Docker-based setup (recommended)
 
 ### 1) Environment
-Create a `.env` file at repository root with required values:
+Create a `.env` file at repository root with the required value:
 
 ```bash
 cat > .env <<'EOF'
 RAILS_MASTER_KEY=dummy
-AWS_BUCKET_URL=https://dev_key:dev_secret@s3-eu-central-1.amazonaws.com/sqily-dev
 EOF
 ```
 
 Required for boot:
-- `AWS_BUCKET_URL` (app parses it at boot in `AwsFileStorage`)
 - `RAILS_MASTER_KEY` (required by compose/env setup)
 
-`AWS_BUCKET_URL` supports both:
-- AWS-hosted S3 URLs, for example: `https://<access_key>:<secret>@s3-eu-central-1.amazonaws.com/<bucket>`
-- local S3-compatible endpoints, for example: `http://minioadmin:minioadmin@127.0.0.1:9000/sqily-test?region=us-east-1&path_style=true`
+Default local Docker behavior:
+- `docker-compose.yml` starts a local MinIO service.
+- the `web` container defaults `AWS_BUCKET_URL` to the internal Docker service endpoint `minio:9000`.
+- a dedicated `minio-setup` service uses the MinIO client to create the development bucket automatically.
+- that same setup service also applies anonymous download access for local file previews.
+- this setup only runs for local MinIO-style endpoints, not real AWS S3.
+- no AWS bucket is required for the default local setup.
+- if your existing `.env` already defines `AWS_BUCKET_URL`, it overrides the MinIO default.
+
+Optional overrides:
+- `AWS_BUCKET_URL` supports AWS-hosted S3 URLs, for example: `https://<access_key>:<secret>@s3-eu-central-1.amazonaws.com/<bucket>`
+- for split container/browser access, `AWS_PUBLIC_BUCKET_URL` can point browser-facing URLs at a different host, for example `http://127.0.0.1:9000/sqily-development`
 
 `docker-compose.yml` already provides:
 - `DATABASE_URL=postgresql://sqily:sqily@db:5432/sqily_development`
 - app binding and volume mounts
+- MinIO on `http://127.0.0.1:9000`
+- MinIO console on `http://127.0.0.1:9001`
+- a one-shot `minio-setup` service that prepares the bucket and public-read access via `minio/mc`
 
 ### 2) Start services
 ```bash
-docker compose up -d db web
+docker compose up -d db minio web
 ```
 
 ### 3) Install gems in container (first time / after Gemfile changes)
@@ -104,17 +114,24 @@ docker compose exec web bundle exec rake sqily:update_crontab
 
 ### File storage
 - Default app code uses custom storage concerns (`AwsFileStorage` / `PublicFileStorage`).
+- Default local Docker setup uses MinIO, not AWS.
 - For S3-backed behavior, configure:
   - `AWS_BUCKET_URL`
+  - optional `AWS_PUBLIC_BUCKET_URL`
   - optional `AWS_BUCKET_PREFIX`
 - For local or CI S3-compatible services (for example MinIO), use:
   - a bucket URL whose path is the bucket name,
   - `region` query param when the host is not AWS-shaped,
   - `path_style=true` for MinIO/path-style addressing.
+- In Docker development, the app container uses `minio:9000` while browser-facing file URLs use `127.0.0.1:9000`.
+- Local Docker development also applies anonymous download access automatically so uploaded files can be previewed directly in the browser.
 
 ### Create AWS bucket and least-privilege IAM user (AWS CLI, eu-central-1)
 The repository includes an automation script:
 - [scripts/setup-aws-s3-dev.sh](/Users/julienreichel/git/sqily/scripts/setup-aws-s3-dev.sh)
+
+This is now optional for local development. Use it only if you explicitly want to test against real AWS S3 instead of local MinIO.
+When using real AWS, the local `minio-setup` service is not part of that path.
 
 What it does:
 1. Creates (or reuses) an S3 bucket in `eu-central-1`.
@@ -139,7 +156,7 @@ Optional flags:
 After running it:
 ```bash
 docker compose down
-docker compose up -d db web
+docker compose up -d db minio web
 ```
 
 Notes:
@@ -187,11 +204,12 @@ Symptom:
 - logs show `URI::InvalidURIError` in `app/models/concerns/aws_file_storage.rb`.
 
 Fix:
-- set `AWS_BUCKET_URL` in `.env`.
+- check that MinIO is running: `docker compose ps`
+- if overriding storage config, ensure `AWS_BUCKET_URL` is valid in `.env`.
 - recreate containers so env is applied:
 ```bash
 docker compose down
-docker compose up -d db web
+docker compose up -d db minio web
 ```
 
 ### Tests fail with `Aws::S3::Errors::InvalidAccessKeyId`
@@ -200,12 +218,13 @@ Symptom:
 
 Fix:
 - configure a reachable S3-compatible endpoint via `AWS_BUCKET_URL`.
+- default Docker development uses local MinIO, so first verify it is running and reachable on `127.0.0.1:9000`.
 - for local development, easiest real-AWS path remains `./scripts/setup-aws-s3-dev.sh`.
 - for CI, the repository now uses local MinIO instead of a real AWS bucket.
 - recreate containers:
 ```bash
 docker compose down
-docker compose up -d db web
+docker compose up -d db minio web
 ```
 
 ### DB connection errors
@@ -233,7 +252,7 @@ Fix:
 
 ## Recommended first-day workflow
 1. Start with Docker and seed data.
-2. Use full Docker runtime (`docker compose up -d db web`).
+2. Use full Docker runtime (`docker compose up -d db minio web`).
 3. Run `docker compose exec web bin/rails test` once to validate local baseline.
 4. Walk one core user flow and one moderator flow manually.
 5. Only then start implementation work on new features.
@@ -255,5 +274,6 @@ Repository secrets not required for current CI:
 3. `RAILS_MASTER_KEY`
 
 Development vs CI:
-1. Local development may still use a real AWS bucket via `.env` and `scripts/setup-aws-s3-dev.sh`.
-2. CI uses local MinIO by default to exercise the real S3 storage code path without cloud provisioning.
+1. Local development now defaults to local MinIO via Docker Compose.
+2. Local development may still use a real AWS bucket via `.env` and `scripts/setup-aws-s3-dev.sh` if explicitly desired.
+3. CI uses local MinIO by default to exercise the real S3 storage code path without cloud provisioning.
