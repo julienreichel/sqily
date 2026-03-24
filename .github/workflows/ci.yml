@@ -67,12 +67,13 @@ jobs:
         run: |
           docker run --rm \
             --network host \
+            --entrypoint /bin/sh \
             -e MINIO_ENDPOINT=http://127.0.0.1:9000 \
             -e MINIO_ROOT_USER="${MINIO_ROOT_USER}" \
             -e MINIO_ROOT_PASSWORD="${MINIO_ROOT_PASSWORD}" \
             -e MINIO_BUCKET="${MINIO_BUCKET}" \
             -v "${PWD}/scripts/setup_minio.sh:/setup/setup_minio.sh:ro" \
-            minio/mc:latest /bin/sh /setup/setup_minio.sh
+            minio/mc:latest /setup/setup_minio.sh
 
       - name: Prepare database
         run: bin/rails db:prepare
