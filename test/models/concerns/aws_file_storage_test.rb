@@ -20,4 +20,15 @@ class AwsFileStorageTest < ActiveSupport::TestCase
     assert_equal("http://127.0.0.1:9000", config.client_options[:endpoint])
     assert_equal(true, config.client_options[:force_path_style])
   end
+
+  def test_build_bucket_config_with_public_bucket_url_override
+    config = AwsFileStorage.build_bucket_config(
+      "http://minioadmin:minioadmin@host.docker.internal:9000/sqily-development?region=us-east-1&path_style=true",
+      "http://127.0.0.1:9000/sqily-development"
+    )
+
+    assert_equal("sqily-development", config.bucket_name)
+    assert_equal("http://127.0.0.1:9000/sqily-development", config.bucket_url)
+    assert_equal("http://host.docker.internal:9000", config.client_options[:endpoint])
+  end
 end
