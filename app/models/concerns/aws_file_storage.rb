@@ -3,18 +3,24 @@ module AwsFileStorage
 
   BucketConfig = Struct.new(:bucket_uri, :bucket_name, :bucket_region, :bucket_url, :client_options, keyword_init: true)
 
-  def self.build_bucket_config(bucket_url)
+  def self.build_bucket_config(bucket_url, public_bucket_url = nil)
     bucket_uri = URI.parse(bucket_url)
     query = Rack::Utils.parse_nested_query(bucket_uri.query)
     aws_hosted = bucket_uri.host&.match?(/\As3(?:[.-][a-z0-9-]+)?\.amazonaws\.com\z/)
 
-    public_bucket_uri = bucket_uri.dup
-    public_bucket_uri.user = public_bucket_uri.password = nil
-    public_bucket_uri.query = public_bucket_uri.fragment = nil
+    public_bucket_uri = if public_bucket_url.present?
+      URI.parse(public_bucket_url)
+    else
+      bucket_uri.dup.tap do |uri|
+        uri.user = uri.password = nil
+        uri.query = uri.fragment = nil
+      end
+    end
 
     client_options = {
       region: query["region"] || infer_region(bucket_uri.host) || "us-east-1",
-      credentials: Aws::Credentials.new(bucket_uri.user, bucket_uri.password)
+      credentials: Aws::Credentials.new(bucket_uri.user, bucket_uri.password),
+      signature_version: "v4"
     }
 
     unless aws_hosted
@@ -41,7 +47,7 @@ module AwsFileStorage
     host&.match(/\As3[.-]([a-z0-9-]+)\.amazonaws\.com\z/)&.captures&.first
   end
 
-  CONFIG = build_bucket_config(ENV.fetch("AWS_BUCKET_URL"))
+  CONFIG = build_bucket_config(ENV.fetch("AWS_BUCKET_URL"), ENV["AWS_PUBLIC_BUCKET_URL"])
   AWS_BUCKET_URL = CONFIG.bucket_uri
   BUCKET_REGION = CONFIG.bucket_region
   BUCKET_NAME = CONFIG.bucket_name
