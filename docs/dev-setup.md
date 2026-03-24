@@ -26,7 +26,6 @@ Default local Docker behavior:
 - the `web` container defaults `AWS_BUCKET_URL` to the internal Docker service endpoint `minio:9000`.
 - a dedicated `minio-setup` service uses the MinIO client to create the development bucket automatically.
 - that same setup service also applies anonymous download access for local file previews.
-- this setup only runs for local MinIO-style endpoints, not real AWS S3.
 - no AWS bucket is required for the default local setup.
 - if your existing `.env` already defines `AWS_BUCKET_URL`, it overrides the MinIO default.
 
@@ -131,7 +130,13 @@ The repository includes an automation script:
 - [scripts/setup-aws-s3-dev.sh](/Users/julienreichel/git/sqily/scripts/setup-aws-s3-dev.sh)
 
 This is now optional for local development. Use it only if you explicitly want to test against real AWS S3 instead of local MinIO.
-When using real AWS, the local `minio-setup` service is not part of that path.
+When using real AWS via Docker Compose, `web` still depends on the local `minio` and `minio-setup` services. Those services continue to provision the local MinIO bucket, but the Rails app uses your explicit `AWS_BUCKET_URL` override instead of the local MinIO default.
+
+Important compatibility note:
+- browser/Trix direct uploads in the current app still use a legacy S3 POST signing flow
+- this works with older S3 regions such as `eu-west-1`
+- it can fail in SigV4-only regions such as `eu-central-1` with `Please use AWS4-HMAC-SHA256`
+- local MinIO avoids that limitation and is the recommended default for development
 
 What it does:
 1. Creates (or reuses) an S3 bucket in `eu-central-1`.
@@ -221,6 +226,7 @@ Fix:
 - default Docker development uses local MinIO, so first verify it is running and reachable on `127.0.0.1:9000`.
 - for local development, easiest real-AWS path remains `./scripts/setup-aws-s3-dev.sh`.
 - for CI, the repository now uses local MinIO instead of a real AWS bucket.
+- local Docker and CI both provision MinIO through the same `scripts/setup_minio.sh` script.
 - recreate containers:
 ```bash
 docker compose down

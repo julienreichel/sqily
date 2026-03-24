@@ -93,6 +93,8 @@ docker compose exec web bin/rails test
 docker compose exec web bundle exec standardrb
 docker compose exec web bin/brakeman
 ```
+Local Docker and GitHub Actions both provision their S3-compatible test bucket through `scripts/setup_minio.sh`.
+
 This currently executes:
 - `bin/rails test`
 - `bundle exec standardrb`
