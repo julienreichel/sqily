@@ -27,10 +27,11 @@ jobs:
       DATABASE_URL: postgresql://postgres@127.0.0.1:5432/sqily_test
       RAILS_MASTER_KEY: dummy
       AWS_BUCKET_URL: http://minioadmin:minioadmin@127.0.0.1:9000/sqily-test?region=us-east-1&path_style=true
+      AWS_PUBLIC_BUCKET_URL: http://127.0.0.1:9000/sqily-test
       AWS_BUCKET_PREFIX: test
-      AWS_ACCESS_KEY_ID: minioadmin
-      AWS_SECRET_ACCESS_KEY: minioadmin
-      AWS_DEFAULT_REGION: us-east-1
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_BUCKET: sqily-test
 
     steps:
       - name: Checkout
@@ -64,21 +65,14 @@ jobs:
 
       - name: Create MinIO test bucket
         run: |
-          bundle exec ruby -e '
-            require "aws-sdk-s3"
-            s3 = Aws::S3::Client.new(
-              access_key_id: ENV.fetch("AWS_ACCESS_KEY_ID"),
-              secret_access_key: ENV.fetch("AWS_SECRET_ACCESS_KEY"),
-              region: ENV.fetch("AWS_DEFAULT_REGION"),
-              endpoint: "http://127.0.0.1:9000",
-              force_path_style: true
-            )
-
-            begin
-              s3.create_bucket(bucket: "sqily-test")
-            rescue Aws::S3::Errors::BucketAlreadyOwnedByYou, Aws::S3::Errors::BucketAlreadyExists
-            end
-          '
+          docker run --rm \
+            --network host \
+            -e MINIO_ENDPOINT=http://127.0.0.1:9000 \
+            -e MINIO_ROOT_USER="${MINIO_ROOT_USER}" \
+            -e MINIO_ROOT_PASSWORD="${MINIO_ROOT_PASSWORD}" \
+            -e MINIO_BUCKET="${MINIO_BUCKET}" \
+            -v "${PWD}/scripts/setup_minio.sh:/setup/setup_minio.sh:ro" \
+            minio/mc:latest /bin/sh /setup/setup_minio.sh
 
       - name: Prepare database
         run: bin/rails db:prepare
