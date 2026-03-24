@@ -265,7 +265,7 @@ GitHub Actions workflow:
 CI storage model:
 1. GitHub Actions starts a local MinIO service.
 2. The workflow points `AWS_BUCKET_URL` to that local S3-compatible endpoint.
-3. The workflow creates the `sqily-test` bucket before `bin/rails db:prepare` and `bin/rails test`.
+3. The workflow reuses `scripts/setup_minio.sh` to create the `sqily-test` bucket and enable anonymous download access before `bin/rails db:prepare` and `bin/rails test`.
 4. No GitHub secret is required for bucket access in CI.
 
 Repository secrets not required for current CI:
