@@ -16,12 +16,11 @@ Read first: `KNOWLEDGE_BASE.md`.
 
 For every non-trivial change:
 
-1. Locate the flow in `docs/flows/*flow.md`.
-2. Confirm route and params in `config/routes.rb`.
-3. Trace guards in controller (`authenticate_user`, `must_be_membership`, role checks).
-4. Trace model/form side effects and callbacks.
-5. Add or update tests near changed behavior.
-6. Run relevant checks (`bin/rails test ...` minimum; `bin/ci` preferred).
+1. Confirm route and params in `config/routes.rb`.
+2. Trace guards in controller (`authenticate_user`, `must_be_membership`, role checks).
+3. Trace model/form side effects and callbacks.
+4. Add or update tests near changed behavior.
+5. Run relevant checks (`bin/rails test ...` minimum; `bin/ci` preferred).
 
 ## 3. Scope and Safety Rules
 
@@ -41,7 +40,7 @@ Before merging any controller/domain change, verify:
 - Are object-level checks still applied after refactor?
 - Are unauthorized paths covered by tests?
 
-Reference: `app/lib/user/permissions.rb` and `docs/tech/permissions-matrix.md`.
+Reference: `app/lib/user/permissions.rb`.
 
 ## 5. Side-Effect Checklist
 
@@ -112,4 +111,4 @@ A task is done when:
 - permissions and side effects remain correct
 - tests pass for changed scope
 - no obvious regressions in related flow
-- docs updated when needed (`KNOWLEDGE_BASE.md` or `docs/*`)
+- docs updated when needed (`KNOWLEDGE_BASE.md`)
