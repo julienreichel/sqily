@@ -23,10 +23,11 @@ Options:
 
 This script:
 1) creates an S3 bucket in eu-central-1 (if missing),
-2) configures bucket settings to allow object ACLs (required by current app code),
-3) creates an IAM user with least-privilege S3 access to that bucket,
-4) creates an access key,
-5) writes AWS_BUCKET_URL to the env file.
+2) configures bucket settings to allow object ACLs and public object reads,
+3) configures permissive CORS for browser-based uploads from local dev,
+4) creates an IAM user with least-privilege S3 access to that bucket,
+5) creates an access key,
+6) writes AWS_BUCKET_URL to the env file.
 USAGE
 }
 
@@ -89,6 +90,51 @@ echo "Configuring bucket ownership and public access settings (ACL-compatible)..
   --bucket "$BUCKET_NAME" \
   --public-access-block-configuration \
   'BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false' >/dev/null
+
+TMP_BUCKET_POLICY="$(mktemp)"
+cat > "$TMP_BUCKET_POLICY" <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadObjects",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": "arn:aws:s3:::$BUCKET_NAME/*"
+    }
+  ]
+}
+POLICY
+
+echo "Applying public-read bucket policy..."
+"${aws_cmd[@]}" s3api put-bucket-policy \
+  --bucket "$BUCKET_NAME" \
+  --policy "file://$TMP_BUCKET_POLICY" >/dev/null
+rm -f "$TMP_BUCKET_POLICY"
+
+TMP_CORS="$(mktemp)"
+cat > "$TMP_CORS" <<CORS
+{
+  "CORSRules": [
+    {
+      "AllowedOrigins": ["*"],
+      "AllowedMethods": ["GET", "HEAD", "POST"],
+      "AllowedHeaders": ["*"],
+      "ExposeHeaders": ["ETag", "Location"],
+      "MaxAgeSeconds": 3000
+    }
+  ]
+}
+CORS
+
+echo "Applying bucket CORS configuration..."
+"${aws_cmd[@]}" s3api put-bucket-cors \
+  --bucket "$BUCKET_NAME" \
+  --cors-configuration "file://$TMP_CORS" >/dev/null
+rm -f "$TMP_CORS"
 
 echo "Ensuring IAM user exists..."
 if "${aws_cmd[@]}" iam get-user --user-name "$USER_NAME" >/dev/null 2>&1; then
@@ -196,6 +242,8 @@ echo
 echo "Done."
 echo "Bucket: $BUCKET_NAME"
 echo "IAM user: $USER_NAME"
+echo "Bucket policy: public-read objects enabled"
+echo "Bucket CORS: enabled for browser uploads"
 echo "AWS_BUCKET_URL written to: $ENV_FILE"
 echo
 echo "Next:"
