@@ -30,7 +30,7 @@ Default local Docker behavior:
 - if your existing `.env` already defines `AWS_BUCKET_URL`, it overrides the MinIO default.
 
 Optional overrides:
-- `AWS_BUCKET_URL` supports AWS-hosted S3 URLs, for example: `https://<access_key>:<secret>@s3-eu-central-1.amazonaws.com/<bucket>`
+- `AWS_BUCKET_URL` supports AWS-hosted S3 URLs, for example: `https://<access_key>:<secret>@s3-eu-west-1.amazonaws.com/<bucket>`
 
 `docker-compose.yml` already provides:
 - `DATABASE_URL=postgresql://sqily:sqily@db:5432/sqily_development`
@@ -124,7 +124,7 @@ docker compose exec web bundle exec rake sqily:update_crontab
 - Docker Compose injects that MinIO browser URL through a local-only `MINIO_PUBLIC_BUCKET_URL` env var, so AWS setups keep deriving their public URL from `AWS_BUCKET_URL`.
 - Local Docker development also applies anonymous download access automatically so uploaded files can be previewed directly in the browser.
 
-### Create AWS bucket and least-privilege IAM user (AWS CLI, eu-central-1)
+### Create AWS bucket and least-privilege IAM user (AWS CLI, eu-west-1)
 The repository includes an automation script:
 - [scripts/setup-aws-s3-dev.sh](/Users/julienreichel/git/sqily/scripts/setup-aws-s3-dev.sh)
 
@@ -133,11 +133,11 @@ When using real AWS via Docker Compose, `web` still depends on the local `minio`
 
 Important compatibility note:
 - browser/Trix direct uploads now use an AWS SigV4-compatible presigned POST
-- this works with SigV4-only regions such as `eu-central-1`
+- this works with SigV4-only regions such as `eu-west-1`
 - local MinIO remains the default development path because it avoids provisioning a real AWS bucket
 
 What it does:
-1. Creates (or reuses) an S3 bucket in `eu-central-1`.
+1. Creates (or reuses) an S3 bucket in `eu-west-1`.
 2. Configures bucket ownership/public-access settings compatible with current app uploads (`acl: public-read`).
 3. Applies a public-read bucket policy so direct object URLs work in the browser.
 4. Applies permissive S3 CORS rules so browser-based Trix uploads can POST directly to the bucket.
@@ -166,7 +166,8 @@ docker compose up -d db minio web
 
 Notes:
 - The script requires AWS credentials with IAM + S3 provisioning permissions, including bucket policy and bucket CORS updates.
-- If the IAM user already has 2 active access keys, AWS blocks creation of a third key; remove one key and rerun.
+- The script automatically deletes inactive IAM access keys for the target user before creating a new key.
+- If the IAM user still has 2 active access keys after that cleanup, AWS blocks creation of a third key; remove one key and rerun.
 - To clean old keys:
 ```bash
 aws iam list-access-keys --user-name sqily-dev-s3-app
