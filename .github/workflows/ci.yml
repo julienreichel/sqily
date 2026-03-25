@@ -27,7 +27,6 @@ jobs:
       DATABASE_URL: postgresql://postgres@127.0.0.1:5432/sqily_test
       RAILS_MASTER_KEY: dummy
       AWS_BUCKET_URL: http://minioadmin:minioadmin@127.0.0.1:9000/sqily-test?region=us-east-1&path_style=true
-      AWS_PUBLIC_BUCKET_URL: http://127.0.0.1:9000/sqily-test
       AWS_BUCKET_PREFIX: test
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin

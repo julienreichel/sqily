@@ -47,7 +47,7 @@ module AwsFileStorage
     host&.match(/\As3[.-]([a-z0-9-]+)\.amazonaws\.com\z/)&.captures&.first
   end
 
-  CONFIG = build_bucket_config(ENV.fetch("AWS_BUCKET_URL"), ENV["AWS_PUBLIC_BUCKET_URL"])
+  CONFIG = build_bucket_config(ENV.fetch("AWS_BUCKET_URL"), ENV["MINIO_PUBLIC_BUCKET_URL"].presence)
   AWS_BUCKET_URL = CONFIG.bucket_uri
   BUCKET_REGION = CONFIG.bucket_region
   BUCKET_NAME = CONFIG.bucket_name
