@@ -31,7 +31,6 @@ Default local Docker behavior:
 
 Optional overrides:
 - `AWS_BUCKET_URL` supports AWS-hosted S3 URLs, for example: `https://<access_key>:<secret>@s3-eu-central-1.amazonaws.com/<bucket>`
-- for split container/browser access, `AWS_PUBLIC_BUCKET_URL` can point browser-facing URLs at a different host, for example `http://127.0.0.1:9000/sqily-development`
 
 `docker-compose.yml` already provides:
 - `DATABASE_URL=postgresql://sqily:sqily@db:5432/sqily_development`
@@ -116,13 +115,13 @@ docker compose exec web bundle exec rake sqily:update_crontab
 - Default local Docker setup uses MinIO, not AWS.
 - For S3-backed behavior, configure:
   - `AWS_BUCKET_URL`
-  - optional `AWS_PUBLIC_BUCKET_URL`
   - optional `AWS_BUCKET_PREFIX`
 - For local or CI S3-compatible services (for example MinIO), use:
   - a bucket URL whose path is the bucket name,
   - `region` query param when the host is not AWS-shaped,
   - `path_style=true` for MinIO/path-style addressing.
 - In Docker development, the app container uses `minio:9000` while browser-facing file URLs use `127.0.0.1:9000`.
+- Docker Compose injects that MinIO browser URL through a local-only `MINIO_PUBLIC_BUCKET_URL` env var, so AWS setups keep deriving their public URL from `AWS_BUCKET_URL`.
 - Local Docker development also applies anonymous download access automatically so uploaded files can be previewed directly in the browser.
 
 ### Create AWS bucket and least-privilege IAM user (AWS CLI, eu-central-1)
