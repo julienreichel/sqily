@@ -10,7 +10,7 @@ Deliver safe, minimal, test-backed changes to Sqily while preserving:
 - learning/validation workflow integrity
 - side effects (messages, notifications, mailers, jobs)
 
-Read first: `KNOWLEDGE_BASED.md`.
+Read first: `KNOWLEDGE_BASE.md`.
 
 ## 2. Mandatory Workflow
 
@@ -112,4 +112,4 @@ A task is done when:
 - permissions and side effects remain correct
 - tests pass for changed scope
 - no obvious regressions in related flow
-- docs updated when needed (`KNOWLEDGE_BASED.md` or `docs/*`)
+- docs updated when needed (`KNOWLEDGE_BASE.md` or `docs/*`)

@@ -14,7 +14,7 @@ Core loops include:
 - Collaboration (messages, polls, events, workspaces).
 - Community governance (memberships, moderation, invitations, teams).
 
-Primary reference: `README.md` and `docs/project.md`.
+Primary reference: `README.md`.
 
 ## 2. Runtime and Stack
 
@@ -41,10 +41,6 @@ Primary reference: `README.md` and `docs/project.md`.
   - `app/lib`: form objects and policies-like helpers (`SkillForm`, `User::Permissions`, etc.)
 - Routing: `config/routes.rb`
 - Schema truth: `db/schema.rb` (version `2026_01_15_152937`)
-- Documentation:
-  - root docs: `docs/*.md`
-  - technical docs: `docs/tech/*.md`
-  - flow docs: `docs/flows/*.md`
 - Tests: `test/**` (Minitest, fixture-heavy)
 - Quality gate script: `bin/ci`
 
@@ -68,8 +64,6 @@ Main entities:
 - Signals:
   - `Notification` types, `Badge` types, `PageView`
 
-Canonical model reference: `docs/tech/domain-model.md`.
-
 ## 5. Request and Access Model
 
 Global patterns:
@@ -88,8 +82,6 @@ Authorization is a mix of:
 - Controller `before_action` guards
 - `User::Permissions` checks (object-level actions)
 - Model predicates (`pinnable_by?`, `viewable_by?`, etc.)
-
-Permissions matrix reference: `docs/tech/permissions-matrix.md`.
 
 ## 6. Critical Business Flows (implemented)
 
@@ -111,15 +103,6 @@ Permissions matrix reference: `docs/tech/permissions-matrix.md`.
   - capacity, waiting list promotion, registration deadline checks
 - Workspaces:
   - versioning + approvals + publish/unpublish and related messages
-
-Flow docs:
-
-- `docs/product-flows.md`
-- `docs/flows/skill-discovery-and-progression-flow.md`
-- `docs/flows/assessment-orchestration-flow.md`
-- `docs/flows/homework-submission-and-review-flow.md`
-- `docs/flows/messaging-and-collaboration-flow.md`
-- `docs/flows/events-participation-flow.md`
 
 ## 7. High-Impact Models and Behaviors
 
@@ -164,8 +147,6 @@ This means small data changes may have broad downstream effects.
   - `bundle exec standardrb`
   - `bin/brakeman`
 
-Testing strategy reference: `docs/testing-strategy.md`.
-
 ## 10. Known Technical Characteristics / Risks
 
 - Large controllers and callback-heavy models increase change risk.
@@ -174,16 +155,13 @@ Testing strategy reference: `docs/testing-strategy.md`.
 - Polling messaging architecture (not WebSocket).
 - Permission coverage is mixed; some endpoints are documented as missing explicit guards.
 
-Reference: `docs/code-quality-review.md` and `docs/tech/permissions-matrix.md`.
-
 ## 11. Agent Orientation: Where to Start for Any Change
 
-1. Identify the flow in `docs/flows/*flow.md`.
-2. Confirm route in `config/routes.rb`.
-3. Inspect controller action + `before_action` guards.
-4. Trace model/service side effects (callbacks, mailers, jobs, message/notification triggers).
-5. Update/add tests in `test/models`, `test/controllers`, and `test/jobs` as needed.
-6. Run `bin/ci` (or Docker equivalent from `docs/dev-setup.md`).
+1. Confirm route in `config/routes.rb`.
+2. Inspect controller action + `before_action` guards.
+3. Trace model/service side effects (callbacks, mailers, jobs, message/notification triggers).
+4. Update/add tests in `test/models`, `test/controllers`, and `test/jobs` as needed.
+5. Run `bin/ci` 
 
 ## 12. Source of Truth Priority
 
@@ -191,5 +169,4 @@ When docs and code differ, trust in this order:
 
 1. `db/schema.rb` and executable code in `app/**`
 2. tests in `test/**`
-3. `docs/**`
-4. `README.md`
+3. `README.md`
