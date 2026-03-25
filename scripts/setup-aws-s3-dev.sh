@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REGION="eu-central-1"
+REGION="eu-west-1"
 PROJECT="sqily"
 ENV_FILE=".env"
 USER_NAME=""
@@ -22,7 +22,7 @@ Options:
   -h, --help            Show this help
 
 This script:
-1) creates an S3 bucket in eu-central-1 (if missing),
+1) creates an S3 bucket in eu-west-1 (if missing),
 2) configures bucket settings to allow object ACLs and public object reads,
 3) configures permissive CORS for browser-based uploads from local dev,
 4) creates an IAM user with least-privilege S3 access to that bucket,
@@ -180,10 +180,22 @@ echo "Applying inline least-privilege policy to IAM user..."
   --policy-document "file://$TMP_POLICY" >/dev/null
 rm -f "$TMP_POLICY"
 
+echo "Cleaning up inactive IAM access keys..."
+"${aws_cmd[@]}" iam list-access-keys \
+  --user-name "$USER_NAME" \
+  --query 'AccessKeyMetadata[?Status==`Inactive`].AccessKeyId' \
+  --output text | tr '\t' '\n' | while IFS= read -r ACCESS_KEY_ID_TO_DELETE; do
+    [[ -z "$ACCESS_KEY_ID_TO_DELETE" ]] && continue
+    echo "Deleting inactive access key: $ACCESS_KEY_ID_TO_DELETE"
+    "${aws_cmd[@]}" iam delete-access-key \
+      --user-name "$USER_NAME" \
+      --access-key-id "$ACCESS_KEY_ID_TO_DELETE" >/dev/null
+  done
+
 echo "Creating access key for IAM user..."
 ACCESS_KEY_COUNT="$("${aws_cmd[@]}" iam list-access-keys --user-name "$USER_NAME" --query 'length(AccessKeyMetadata)' --output text)"
 if [[ "$ACCESS_KEY_COUNT" -ge 2 ]]; then
-  echo "IAM user already has 2 access keys. Delete one key before re-running:" >&2
+  echo "IAM user still has 2 active access keys. Delete one key before re-running:" >&2
   echo "  aws iam list-access-keys --user-name $USER_NAME" >&2
   exit 1
 fi
