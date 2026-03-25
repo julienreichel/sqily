@@ -132,19 +132,20 @@ This is now optional for local development. Use it only if you explicitly want t
 When using real AWS via Docker Compose, `web` still depends on the local `minio` and `minio-setup` services. Those services continue to provision the local MinIO bucket, but the Rails app uses your explicit `AWS_BUCKET_URL` override instead of the local MinIO default.
 
 Important compatibility note:
-- browser/Trix direct uploads in the current app still use a legacy S3 POST signing flow
-- this works with older S3 regions such as `eu-west-1`
-- it can fail in SigV4-only regions such as `eu-central-1` with `Please use AWS4-HMAC-SHA256`
-- local MinIO avoids that limitation and is the recommended default for development
+- browser/Trix direct uploads now use an AWS SigV4-compatible presigned POST
+- this works with SigV4-only regions such as `eu-central-1`
+- local MinIO remains the default development path because it avoids provisioning a real AWS bucket
 
 What it does:
 1. Creates (or reuses) an S3 bucket in `eu-central-1`.
 2. Configures bucket ownership/public-access settings compatible with current app uploads (`acl: public-read`).
-3. Creates (or reuses) an IAM user.
-4. Applies a least-privilege inline policy for that single bucket:
+3. Applies a public-read bucket policy so direct object URLs work in the browser.
+4. Applies permissive S3 CORS rules so browser-based Trix uploads can POST directly to the bucket.
+5. Creates (or reuses) an IAM user.
+6. Applies a least-privilege inline policy for that single bucket:
    - bucket metadata: `s3:GetBucketLocation`, `s3:ListBucket`
    - object operations: `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`, `s3:PutObjectAcl`
-5. Creates one URI-compatible access key and writes `AWS_BUCKET_URL` + `AWS_BUCKET_PREFIX=development` to `.env`.
+7. Creates one URI-compatible access key and writes `AWS_BUCKET_URL` + `AWS_BUCKET_PREFIX=development` to `.env`.
 
 Run:
 ```bash
@@ -164,7 +165,7 @@ docker compose up -d db minio web
 ```
 
 Notes:
-- The script requires AWS credentials with IAM + S3 provisioning permissions.
+- The script requires AWS credentials with IAM + S3 provisioning permissions, including bucket policy and bucket CORS updates.
 - If the IAM user already has 2 active access keys, AWS blocks creation of a third key; remove one key and rerun.
 - To clean old keys:
 ```bash
